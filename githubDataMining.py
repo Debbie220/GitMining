@@ -93,6 +93,11 @@ def getCommitDate(page):
     datetime = page.find('relative-time', 'no-wrap')
     return datetime['datetime'].split('T')[0]
 
+#takes a git commit page and extracts the month of a certaain commit
+def getCommitMonth(page):
+    datetime = page.find('relative-time', 'no-wrap')
+    return datetime['datetime'].split('-')[1]
+
 #takes a page of commits and gets the link to the next set of commits.
 def getNextCommitsPage(page):
     next_page = page.find_all("a", "btn btn-outline BtnGroup-item")
@@ -102,6 +107,8 @@ def getNextCommitsPage(page):
 nova_page = requests.get("https://github.com/openstack/nova/tree/master/nova").text
 nova = BeautifulSoup(nova_page, "lxml")
 totalChurn = 0
+monthlyChurn = 0
+current_commit_month = 8 #since current month is August, better ways to do this though by actually getting the current date with a function
 
 #get all the files/folders in nova subdirectory
 #and starts a dictionary to keep track of any commit changes for each file
@@ -110,7 +117,7 @@ commits_url = "https://github.com/openstack/nova/commits/master"
 start_date = "2022-01-01" #Date to use for start of mining commits
 start_date1 = time.strptime(start_date, "%Y-%m-%d")
 
-print("Data mining first page of commits... Please Wait")
+print("Mining first page of commits... Please Wait")
 
 endLoop = False
 
@@ -129,22 +136,38 @@ while endLoop == False:
         for file in commit_files:
             if file in nova_files.keys():
                 nova_files[file] += 1
+        currentChurn = getChurnRate(git_page)
+        totalChurn += currentChurn
 
-        totalChurn += getChurnRate(git_page)
-        #print("Current Churn Value", totalChurn)
+        #print("Churn Rate of this commit is ", currentChurn)
 
+        #get date of commit
         commit_date = getCommitDate(git_page)
         commit_date1 = time.strptime(commit_date, "%Y-%m-%d")
-        #print(commit_date)
+
+        #get the month of the commit
+        commit_month = getCommitMonth(git_page)
+        if int(commit_month) == current_commit_month:
+            monthlyChurn += currentChurn
+        #since we're starting from current month to previous months
+        elif int(commit_month) < current_commit_month:
+            print("Monthly Churn for ", current_commit_month, " is ", monthlyChurn)
+            print("Test, Virt, Compute, : ", nova_files['tests'], nova_files['virt'], nova_files['compute'])
+            current_commit_month -=1
+            monthlyChurn = currentChurn
+
+        #check if date of commit being analyzed is within the time range that we want to analyze
         if commit_date1 < start_date1:
+            #print churn rate for current month being evaluated before ending program
+            print("Monthly Churn for ", current_commit_month, " is ", monthlyChurn)
             endLoop = True
             break
     commits_url = getNextCommitsPage(commits)
-    #print("Next Page Commit URL: ", commits_url)
+
     print("Mining next set of commits... Please wait")
 
 print("Phewwww, Finally done!, Thanks for being patient :)")
-print("First 12 files with the most changes are Below")
+print("The 12 most modified files of the nova subdirectory are below")
 
 #Sorts dictionary in descending order
 #Retrieved from https://careerkarma.com/blog/python-sort-a-dictionary-by-value/
