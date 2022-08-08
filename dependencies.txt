@@ -1,0 +1,8 @@
+Dependencies needed for this program to run.
+1. First need to install pip3 either through homebrew or any other package manager of your choice
+(homebrew install pip3)
+2. Then the remaining packages can now be installed by running the following commands
+pip3 install PyGithub requests
+pip3 install requests beautifulsoup4
+pip3 install lxml
+pip3 install regex
