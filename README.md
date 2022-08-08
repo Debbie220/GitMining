@@ -5,3 +5,4 @@
 (total number of additions and deletions of whole project) for the specified time period.
 This program can also be easily edited to analyze the rate of commits for longer periods e.g. the past year.</p>
 <p>Please check out the file dependencies.txt for a list of what packages are needed for this program to work</p>
+<p>From the command line, just need to run "python3 githubDataMining.py" for the program to be executed</p>
